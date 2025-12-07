@@ -1,68 +1,94 @@
 <?php
+// tampilkan error agar tidak blank
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
 session_start();
-include 'koneksi.php';
+require 'koneksi.php';
 
+$error = "";
+
+// --- tombol login ditekan ---
 if (isset($_POST['btn_login'])) {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
-    $username = mysqli_real_escape_string($koneksi, $username);
-    $password = mysqli_real_escape_string($koneksi, $password);
 
-    $query = "SELECT * FROM user WHERE USERNAME = '$username' AND PASSWORD = '$password'";
-    $result = mysqli_query($koneksi, $query);
+    $username = trim($_POST['username']);
+    $password = trim($_POST['password']);
 
-    if (mysqli_num_rows($result) > 0) {
-        $data = mysqli_fetch_assoc($result);
+    // cek username
+    $stmt = mysqli_prepare($koneksi, 
+        "SELECT id_user, username, password, role FROM user WHERE username = ? LIMIT 1"
+    );
+    mysqli_stmt_bind_param($stmt, "s", $username);
+    mysqli_stmt_execute($stmt);
+    $res  = mysqli_stmt_get_result($stmt);
+    $user = mysqli_fetch_assoc($res);
 
-        $_SESSION['username'] = $username;
-        $_SESSION['role'] = $data['role'];
-        $_SESSION['id_user'] = $data['ID_USER'];
-        $_SESSION['status'] = "login";
+    if ($user && password_verify($password, $user['password'])) {
 
-        if ($data['role'] == "admin") {
+        // simpan session
+        $_SESSION['id_user']  = $user['id_user'];
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['role']     = $user['role'];
+
+        // redirect sesuai role
+        if ($user['role'] === "admin") {
             header("Location: page_admin.php");
-            
-        } else if ($data['role'] == "pemilik") {
-            header("Location: page_pemilik.php");
-            
-        } else if ($data['role'] == "pembeli") {
+            exit;
+        } 
+        else if ($user['role'] === "pembeli") {
+            header("Location: produk.php");
+            exit;
+        }
+        else {
             header("Location: index.php");
-            
-        } else {
-            echo "Role tidak dikenali!";
+            exit;
         }
 
     } else {
-        echo "<script>alert('Username atau Password Salah!');</script>";
+        $error = "Username atau password salah.";
     }
+
+    mysqli_stmt_close($stmt);
 }
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
     <title>Login Toko</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .login-box { width: 300px; margin: 100px auto; border: 1px solid #ccc; padding: 20px; border-radius: 5px; }
-        input { width: 100%; padding: 10px; margin: 5px 0; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: blue; color: white; border: none; }
-    </style>
 </head>
 <body>
 
-    <div class="login-box">
-        <h2 style="text-align:center;">Login User</h2>
-        <form method="POST" action="">
+<div class="form-box" style="margin-top:80px;">
+    <h2>Login User</h2>
+
+    <?php if (!empty($error)): ?>
+        <div style="background:#fee;padding:10px;border-radius:8px;color:#900;margin-bottom:12px">
+            <?= htmlspecialchars($error) ?>
+        </div>
+    <?php endif; ?>
+
+    <form method="POST">
+        <div class="form-group">
             <label>Username</label>
-            <input type="text" name="username" placeholder="Masukkan username" required>
-            
+            <input class="form-input" type="text" name="username" required>
+        </div>
+
+        <div class="form-group">
             <label>Password</label>
-            <input type="password" name="password" placeholder="Masukkan password" required>
-            
-            <button type="submit" name="btn_login">MASUK</button>
-        </form>
-    </div>
+            <input class="form-input" type="password" name="password" required>
+        </div>
+
+        <button class="btn btn-add" name="btn_login" type="submit">MASUK</button>
+    </form>
+
+    <p style="margin-top:12px;text-align:center;">
+        Belum punya akun pembeli? <a href="register.php" style="color:#0f61c9">Daftar Pembeli</a><br>
+        Admin? <a href="register_admin.php" style="color:#0f61c9">Daftar Admin</a>
+    </p>
+
+</div>
 
 </body>
 </html>

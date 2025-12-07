@@ -1,9 +1,11 @@
 <?php
 session_start();
-if($_SESSION['role'] != 'pemilik'){
-    die("Anda bukan Pemilik Toko!");
+if (!isset($_SESSION['role']) || $_SESSION['role'] != 'pemilik') {
+    die("Anda bukan pemilik!");
 }
 ?>
-<h1>Halo Bos Pemilik Toko</h1>
-<p>Di sini tempat atur stok dan harga.</p>
+<h1>SELAMAT DATANG PEMILIK</h1>
+<p>Anda dapat mengontrol laporan, stok, admin dll.</p>
+
+<a href="page_admin.php">Masuk Panel Admin</a><br>
 <a href="logout.php">Logout</a>

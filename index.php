@@ -1,47 +1,79 @@
 <?php
-include 'koneksi.php';
-$query = "SELECT * FROM daftar_produk";
-$result = mysqli_query($koneksi, $query);
+session_start();
+require "koneksi.php";
+
+// ambil data produk
+$produk = mysqli_query($koneksi, "SELECT * FROM produk");
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>Toko Online Kelompok Kami</title>
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="UTF-8">
+    <title>Toko Komputer</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-    <h1>Selamat Datang di Toko Komputer</h1>
-    
-    <table border="1">
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>Nama Produk</th>
-                <th>Harga</th>
-                <th>Stok</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php 
-            $no = 1;
-            // Looping data dari database
-            while($row = mysqli_fetch_assoc($result)) { 
-            ?>
-            <tr>
-                <td><?php echo $no++; ?></td>
-                <td><?php echo $row['NAMA_PRODUK']; ?></td>
-                <td>Rp <?php echo number_format($row['HARGA_PRODUK']); ?></td>
-                <td><?php echo $row['STOK_PRODUK']; ?> pcs</td>
-                <td>
-                    <a href="beli.php?id=<?php echo $row['ID_PRODUK']; ?>" class="btn-beli">Beli Sekarang</a>
-                </td>
-            </tr>
-            <?php } ?>
-        </tbody>
-    </table>
+<div class="container">
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="brand">Toko Komputer</div>
+
+        <div class="nav-right">
+            <a href="riwayat.php">
+                <img src="img/history.png" class="history-icon">
+            </a>
+
+            <a href="keranjang.php" class="cart-icon">
+                <img src="img/cart.png">
+                <span class="cart-count">
+                    <?php 
+                    echo isset($_SESSION['cart_total']) ? $_SESSION['cart_total'] : 0;
+                    ?>
+                </span>
+            </a>
+        </div>
+    </div>
+
+    <!-- GRID PRODUK -->
+    <div class="products-grid">
+
+        <?php while ($row = mysqli_fetch_assoc($produk)) { ?>
+            <div class="product-card">
+                
+                <div class="product-img">
+                    <?php echo htmlspecialchars($row['nama_produk']); ?>
+                </div>
+
+                <div class="product-name">
+                    <?php echo htmlspecialchars($row['nama_produk']); ?>
+                </div>
+
+                <div class="product-price">
+                    Rp <?php echo number_format($row['harga']); ?>
+                </div>
+
+                <div class="product-stock">
+                    Stok: —
+                </div>
+
+                <div class="inline-row">
+                    <form action="tambah_keranjang.php" method="POST">
+                        <input type="hidden" name="id_produk" value="<?php echo $row['id']; ?>">
+                        <input type="number" name="qty" class="qty-input" min="1" value="1">
+                        <button class="btn btn-add">Tambah</button>
+                    </form>
+                </div>
+
+            </div>
+        <?php } ?>
+
+    </div>
+
+</div>
 
 </body>
 </html>
